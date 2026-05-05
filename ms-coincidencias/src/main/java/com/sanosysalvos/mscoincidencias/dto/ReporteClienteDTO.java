@@ -1,24 +1,21 @@
-package com.sanosysalvos.msreportes.dto;
+// ReporteClienteDTO.java
+package com.sanosysalvos.mscoincidencias.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class ReporteDTO {
+public class ReporteClienteDTO {
     private Long id;
-    private String tipo;
+    private String tipo;        // PERDIDO, ENCONTRADO
     private String estado;
     private Long usuarioId;
     private BigDecimal latitud;
     private BigDecimal longitud;
     private String comuna;
     private LocalDate fechaEvento;
+    // Datos de la mascota anidada
     private String mascotaEspecie;
     private String mascotaRaza;
     private String mascotaColor;
