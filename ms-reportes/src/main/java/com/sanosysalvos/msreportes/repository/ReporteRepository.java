@@ -10,6 +10,7 @@ import java.util.List;
 public interface ReporteRepository extends JpaRepository<Reporte, Long> {
     List<Reporte> findByTipo(String tipo);
     List<Reporte> findByEstado(String estado);
+    List<Reporte> findByComunaIgnoreCase(String comuna);
     List<Reporte> findByComuna(String comuna);
     List<Reporte> findByUsuarioId(Long usuarioId);
     List<Reporte> findByTipoAndEstado(String tipo, String estado);

@@ -1,6 +1,6 @@
-// ReporteController.java
 package com.sanosysalvos.msreportes.controller;
 
+import com.sanosysalvos.msreportes.dto.ReporteDTO;
 import com.sanosysalvos.msreportes.model.Reporte;
 import com.sanosysalvos.msreportes.service.ReporteService;
 import jakarta.validation.Valid;
@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -28,17 +29,17 @@ public class ReporteController {
     }
 
     @GetMapping("/tipo/{tipo}")
-    public ResponseEntity<List<Reporte>> obtenerPorTipo(@PathVariable String tipo) {
-        return ResponseEntity.ok(reporteService.obtenerPorTipo(tipo.toUpperCase()));
+    public ResponseEntity<List<ReporteDTO>> obtenerPorTipo(@PathVariable String tipo) {
+        return ResponseEntity.ok(reporteService.obtenerPorTipo(tipo));
     }
 
     @GetMapping("/perdidos")
-    public ResponseEntity<List<Reporte>> listarPerdidos() {
+    public ResponseEntity<List<ReporteDTO>> listarPerdidos() {
         return ResponseEntity.ok(reporteService.obtenerPorTipo("PERDIDO"));
     }
 
     @GetMapping("/encontrados")
-    public ResponseEntity<List<Reporte>> listarEncontrados() {
+    public ResponseEntity<List<ReporteDTO>> listarEncontrados() {
         return ResponseEntity.ok(reporteService.obtenerPorTipo("ENCONTRADO"));
     }
 
