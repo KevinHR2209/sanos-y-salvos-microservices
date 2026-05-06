@@ -12,10 +12,10 @@
     </parent>
 
     <groupId>com.sanosysalvos</groupId>
-    <artifactId>ms-coincidencias</artifactId>
+    <artifactId>ms-geoespacial</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>ms-coincidencias</name>
-    <description>Microservicio de coincidencias</description>
+    <name>ms-geoespacial</name>
+    <description>Microservicio geoespacial</description>
 
     <properties>
         <java.version>17</java.version>
@@ -35,6 +35,11 @@
     </dependencyManagement>
 
     <dependencies>
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-spatial</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>

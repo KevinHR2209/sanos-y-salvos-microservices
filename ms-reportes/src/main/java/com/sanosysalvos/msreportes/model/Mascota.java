@@ -1,5 +1,6 @@
 package com.sanosysalvos.msreportes.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -45,6 +46,7 @@ public class Mascota {
     @Column(name = "usuario_id", nullable = false)
     private Long usuarioId;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "mascota", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Reporte> reportes;
 
