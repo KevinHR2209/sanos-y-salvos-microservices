@@ -8,6 +8,7 @@ import com.sanosysalvos.msusuarios.model.Usuario;
 import com.sanosysalvos.msusuarios.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,6 +20,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final UsuarioRepository usuarioRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<UsuarioDTO> listarTodos() {
         return usuarioRepository.findAll().stream()
                 .map(this::toDTO)
@@ -26,6 +28,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UsuarioDTO obtenerPorId(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + id));
@@ -33,6 +36,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UsuarioDTO obtenerPorEmail(String email) {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + email));
@@ -40,7 +44,8 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    public Usuario actualizar(Long id, Usuario datos) {
+    @Transactional
+    public UsuarioDTO actualizar(Long id, UsuarioDTO datos) {
         Usuario existente = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + id));
         existente.setNombre(datos.getNombre());
@@ -48,10 +53,11 @@ public class UsuarioServiceImpl implements UsuarioService {
         existente.setTelefono(datos.getTelefono());
         existente.setComuna(datos.getComuna());
         existente.setRegion(datos.getRegion());
-        return usuarioRepository.save(existente);
+        return toDTO(usuarioRepository.save(existente));
     }
 
     @Override
+    @Transactional
     public void desactivar(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + id));
@@ -59,7 +65,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuarioRepository.save(usuario);
     }
 
-    // Mapper manual para no exponer password
+    // Mapper manual para no exponer passwordHash ni datos sensibles
     private UsuarioDTO toDTO(Usuario u) {
         UsuarioDTO dto = new UsuarioDTO();
         dto.setId(u.getId());

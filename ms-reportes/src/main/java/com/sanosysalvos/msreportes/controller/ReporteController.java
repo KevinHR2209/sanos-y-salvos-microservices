@@ -1,7 +1,7 @@
 package com.sanosysalvos.msreportes.controller;
 
 import com.sanosysalvos.msreportes.dto.ReporteDTO;
-import com.sanosysalvos.msreportes.model.Reporte;
+import com.sanosysalvos.msreportes.dto.ReporteRequestDTO;
 import com.sanosysalvos.msreportes.service.ReporteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,12 +19,12 @@ public class ReporteController {
     private final ReporteService reporteService;
 
     @GetMapping
-    public ResponseEntity<List<Reporte>> listarTodos() {
+    public ResponseEntity<List<ReporteDTO>> listarTodos() {
         return ResponseEntity.ok(reporteService.listarTodos());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Reporte> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<ReporteDTO> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(reporteService.obtenerPorId(id));
     }
 
@@ -44,24 +44,24 @@ public class ReporteController {
     }
 
     @GetMapping("/comuna/{comuna}")
-    public ResponseEntity<List<Reporte>> obtenerPorComuna(@PathVariable String comuna) {
+    public ResponseEntity<List<ReporteDTO>> obtenerPorComuna(@PathVariable String comuna) {
         return ResponseEntity.ok(reporteService.obtenerPorComuna(comuna));
     }
 
     @PostMapping
-    public ResponseEntity<Reporte> crear(@Valid @RequestBody Reporte reporte) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(reporteService.crear(reporte));
+    public ResponseEntity<ReporteDTO> crear(@Valid @RequestBody ReporteRequestDTO request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(reporteService.crear(request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Reporte> actualizar(@PathVariable Long id,
-                                              @Valid @RequestBody Reporte reporte) {
-        return ResponseEntity.ok(reporteService.actualizar(id, reporte));
+    public ResponseEntity<ReporteDTO> actualizar(@PathVariable Long id,
+                                                 @Valid @RequestBody ReporteRequestDTO request) {
+        return ResponseEntity.ok(reporteService.actualizar(id, request));
     }
 
     @PatchMapping("/{id}/estado")
-    public ResponseEntity<Reporte> cambiarEstado(@PathVariable Long id,
-                                                 @RequestParam String estado) {
+    public ResponseEntity<ReporteDTO> cambiarEstado(@PathVariable Long id,
+                                                    @RequestParam String estado) {
         return ResponseEntity.ok(reporteService.cambiarEstado(id, estado.toUpperCase()));
     }
 

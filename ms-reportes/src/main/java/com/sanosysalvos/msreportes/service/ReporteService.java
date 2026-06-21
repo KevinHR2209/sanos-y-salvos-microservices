@@ -1,25 +1,25 @@
 package com.sanosysalvos.msreportes.service;
 
 import com.sanosysalvos.msreportes.dto.ReporteDTO;
-import com.sanosysalvos.msreportes.model.Reporte;
+import com.sanosysalvos.msreportes.dto.ReporteRequestDTO;
 
 import java.util.List;
 
 public interface ReporteService {
 
-    List<Reporte> listarTodos();
+    List<ReporteDTO> listarTodos();
 
-    Reporte obtenerPorId(Long id);
+    ReporteDTO obtenerPorId(Long id);
 
     List<ReporteDTO> obtenerPorTipo(String tipo);
 
-    List<Reporte> obtenerPorComuna(String comuna);
+    List<ReporteDTO> obtenerPorComuna(String comuna);
 
-    Reporte crear(Reporte reporte);
+    ReporteDTO crear(ReporteRequestDTO request);
 
-    Reporte actualizar(Long id, Reporte reporte);
+    ReporteDTO actualizar(Long id, ReporteRequestDTO request);
 
-    Reporte cambiarEstado(Long id, String estado);
+    ReporteDTO cambiarEstado(Long id, String estado);
 
     void eliminar(Long id);
 }

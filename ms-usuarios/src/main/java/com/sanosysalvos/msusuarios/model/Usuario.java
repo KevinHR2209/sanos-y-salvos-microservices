@@ -44,7 +44,8 @@ public class Usuario {
     @Column(name = "email_verificado")
     private Boolean emailVerificado = false;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    // Cambiado de EAGER a LAZY para evitar problemas de rendimiento y loops infinitos
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "usuario_roles",
             joinColumns = @JoinColumn(name = "usuario_id"),

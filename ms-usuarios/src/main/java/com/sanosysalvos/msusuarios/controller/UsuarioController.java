@@ -2,7 +2,6 @@
 package com.sanosysalvos.msusuarios.controller;
 
 import com.sanosysalvos.msusuarios.dto.UsuarioDTO;
-import com.sanosysalvos.msusuarios.model.Usuario;
 import com.sanosysalvos.msusuarios.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,8 +32,8 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> actualizar(@PathVariable Long id,
-                                              @RequestBody Usuario datos) {
+    public ResponseEntity<UsuarioDTO> actualizar(@PathVariable Long id,
+                                                 @RequestBody UsuarioDTO datos) {
         return ResponseEntity.ok(usuarioService.actualizar(id, datos));
     }
 

@@ -1,14 +1,15 @@
 // MascotaService.java
 package com.sanosysalvos.msreportes.service;
 
-import com.sanosysalvos.msreportes.model.Mascota;
+import com.sanosysalvos.msreportes.dto.MascotaDTO;
+import com.sanosysalvos.msreportes.dto.MascotaRequestDTO;
 import java.util.List;
 
 public interface MascotaService {
-    List<Mascota> listarTodas();
-    Mascota obtenerPorId(Long id);
-    Mascota crear(Mascota mascota);
-    Mascota actualizar(Long id, Mascota mascota);
+    List<MascotaDTO> listarTodas();
+    MascotaDTO obtenerPorId(Long id);
+    MascotaDTO crear(MascotaRequestDTO mascotaRequest);
+    MascotaDTO actualizar(Long id, MascotaRequestDTO mascotaRequest);
     void eliminar(Long id);
-    List<Mascota> obtenerPorUsuario(Long usuarioId);
+    List<MascotaDTO> obtenerPorUsuario(Long usuarioId);
 }
