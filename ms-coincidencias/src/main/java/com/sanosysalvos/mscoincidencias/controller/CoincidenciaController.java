@@ -1,7 +1,6 @@
-// CoincidenciaController.java
 package com.sanosysalvos.mscoincidencias.controller;
 
-import com.sanosysalvos.mscoincidencias.model.Coincidencia;
+import com.sanosysalvos.mscoincidencias.dto.CoincidenciaDTO;
 import com.sanosysalvos.mscoincidencias.service.CoincidenciaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,33 +16,32 @@ public class CoincidenciaController {
     private final CoincidenciaService coincidenciaService;
 
     @GetMapping
-    public ResponseEntity<List<Coincidencia>> listarTodas() {
+    public ResponseEntity<List<CoincidenciaDTO>> listarTodas() {
         return ResponseEntity.ok(coincidenciaService.listarTodas());
     }
 
     @GetMapping("/pendientes")
-    public ResponseEntity<List<Coincidencia>> listarPendientes() {
+    public ResponseEntity<List<CoincidenciaDTO>> listarPendientes() {
         return ResponseEntity.ok(coincidenciaService.listarPendientes());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Coincidencia> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<CoincidenciaDTO> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(coincidenciaService.obtenerPorId(id));
     }
 
-    // Endpoint clave: dispara el motor de matching
     @PostMapping("/buscar")
-    public ResponseEntity<List<Coincidencia>> ejecutarBusqueda() {
+    public ResponseEntity<List<CoincidenciaDTO>> ejecutarBusqueda() {
         return ResponseEntity.ok(coincidenciaService.ejecutarBusquedaAutomatica());
     }
 
     @PatchMapping("/{id}/confirmar")
-    public ResponseEntity<Coincidencia> confirmar(@PathVariable Long id) {
+    public ResponseEntity<CoincidenciaDTO> confirmar(@PathVariable Long id) {
         return ResponseEntity.ok(coincidenciaService.confirmar(id));
     }
 
     @PatchMapping("/{id}/descartar")
-    public ResponseEntity<Coincidencia> descartar(@PathVariable Long id) {
+    public ResponseEntity<CoincidenciaDTO> descartar(@PathVariable Long id) {
         return ResponseEntity.ok(coincidenciaService.descartar(id));
     }
 }

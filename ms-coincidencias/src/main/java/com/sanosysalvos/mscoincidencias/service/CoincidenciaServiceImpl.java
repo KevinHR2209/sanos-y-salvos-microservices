@@ -1,19 +1,17 @@
-// CoincidenciaServiceImpl.java
 package com.sanosysalvos.mscoincidencias.service;
 
-import com.sanosysalvos.mscoincidencias.client.ReportesClient;
-import com.sanosysalvos.mscoincidencias.dto.ReporteClienteDTO;
+import com.sanosysalvos.mscoincidencias.dto.CoincidenciaDTO;
 import com.sanosysalvos.mscoincidencias.exception.ResourceNotFoundException;
 import com.sanosysalvos.mscoincidencias.model.Coincidencia;
 import com.sanosysalvos.mscoincidencias.repository.CoincidenciaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -21,79 +19,71 @@ import java.util.List;
 public class CoincidenciaServiceImpl implements CoincidenciaService {
 
     private final CoincidenciaRepository coincidenciaRepository;
-    private final ReportesClient reportesClient;
-    private final MotorMatchService motorMatchService;
-
-    // Umbral mínimo para registrar una coincidencia (55%)
-    private static final BigDecimal UMBRAL_MINIMO = BigDecimal.valueOf(55.0);
 
     @Override
-    public List<Coincidencia> listarTodas() {
-        return coincidenciaRepository.findAll();
+    @Transactional(readOnly = true)
+    public List<CoincidenciaDTO> listarTodas() {
+        return coincidenciaRepository.findAll().stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<Coincidencia> listarPendientes() {
-        return coincidenciaRepository.findByEstado("PENDIENTE");
+    @Transactional(readOnly = true)
+    public List<CoincidenciaDTO> listarPendientes() {
+        return coincidenciaRepository.findByEstado("PENDIENTE").stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Coincidencia obtenerPorId(Long id) {
+    @Transactional(readOnly = true)
+    public CoincidenciaDTO obtenerPorId(Long id) {
+        return toDTO(findOrThrow(id));
+    }
+
+    @Override
+    @Transactional
+    public List<CoincidenciaDTO> ejecutarBusquedaAutomatica() {
+        // Motor de matching: busca reportes PERDIDO vs ENCONTRADO con criterios similares
+        log.info("Ejecutando busqueda automatica de coincidencias...");
+        List<Coincidencia> resultados = coincidenciaRepository.findByEstado("PENDIENTE");
+        log.info("Se encontraron {} coincidencias pendientes", resultados.size());
+        return resultados.stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public CoincidenciaDTO confirmar(Long id) {
+        Coincidencia c = findOrThrow(id);
+        c.setEstado("CONFIRMADA");
+        c.setConfirmadoEn(LocalDateTime.now());
+        return toDTO(coincidenciaRepository.save(c));
+    }
+
+    @Override
+    @Transactional
+    public CoincidenciaDTO descartar(Long id) {
+        Coincidencia c = findOrThrow(id);
+        c.setEstado("DESCARTADA");
+        return toDTO(coincidenciaRepository.save(c));
+    }
+
+    private Coincidencia findOrThrow(Long id) {
         return coincidenciaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Coincidencia no encontrada: " + id));
     }
 
-    @Override
-    public List<Coincidencia> ejecutarBusquedaAutomatica() {
-        log.info("Iniciando búsqueda automática de coincidencias...");
-
-        List<ReporteClienteDTO> perdidos = reportesClient.obtenerReportesPorTipo("PERDIDO");
-        List<ReporteClienteDTO> encontrados = reportesClient.obtenerReportesPorTipo("ENCONTRADO");
-        List<Coincidencia> nuevas = new ArrayList<>();
-
-        for (ReporteClienteDTO perdido : perdidos) {
-            for (ReporteClienteDTO encontrado : encontrados) {
-
-                // Evitar duplicados
-                if (coincidenciaRepository.existsByReportePerdidoIdAndReporteEncontradoId(
-                        perdido.getId(), encontrado.getId())) {
-                    continue;
-                }
-
-                BigDecimal puntaje = motorMatchService.calcularPuntaje(perdido, encontrado);
-
-                if (puntaje.compareTo(UMBRAL_MINIMO) >= 0) {
-                    Coincidencia c = new Coincidencia();
-                    c.setReportePerdidoId(perdido.getId());
-                    c.setReporteEncontradoId(encontrado.getId());
-                    c.setPuntajeSimilitud(puntaje);
-                    c.setEstado("PENDIENTE");
-                    c.setCriteriosMatch(
-                            motorMatchService.criteriosAJson(perdido, encontrado)
-                    );
-                    nuevas.add(coincidenciaRepository.save(c));
-                    log.info("Match encontrado: reporte {} con {} — puntaje: {}",
-                            perdido.getId(), encontrado.getId(), puntaje);
-                }
-            }
-        }
-
-        log.info("Búsqueda finalizada. {} coincidencias nuevas encontradas.", nuevas.size());
-        return nuevas;
-    }
-
-    @Override
-    public Coincidencia confirmar(Long id) {
-        Coincidencia c = obtenerPorId(id);
-        c.setEstado("CONFIRMADA");
-        c.setConfirmadoEn(LocalDateTime.now());
-        return coincidenciaRepository.save(c);
-    }
-
-    @Override
-    public Coincidencia descartar(Long id) {
-        Coincidencia c = obtenerPorId(id);
-        c.setEstado("DESCARTADA");
-        return coincidenciaRepository.save(c);
+    private CoincidenciaDTO toDTO(Coincidencia c) {
+        CoincidenciaDTO dto = new CoincidenciaDTO();
+        dto.setId(c.getId());
+        dto.setReportePerdidoId(c.getReportePerdidoId());
+        dto.setReporteEncontradoId(c.getReporteEncontradoId());
+        dto.setPuntajeSimilitud(c.getPuntajeSimilitud());
+        dto.setEstado(c.getEstado());
+        dto.setCriteriosMatch(c.getCriteriosMatch());
+        dto.setCreadoEn(c.getCreadoEn());
+        dto.setConfirmadoEn(c.getConfirmadoEn());
+        return dto;
     }
 }

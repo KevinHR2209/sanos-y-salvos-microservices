@@ -1,14 +1,13 @@
-// CoincidenciaService.java
 package com.sanosysalvos.mscoincidencias.service;
 
-import com.sanosysalvos.mscoincidencias.model.Coincidencia;
+import com.sanosysalvos.mscoincidencias.dto.CoincidenciaDTO;
 import java.util.List;
 
 public interface CoincidenciaService {
-    List<Coincidencia> listarTodas();
-    List<Coincidencia> listarPendientes();
-    Coincidencia obtenerPorId(Long id);
-    List<Coincidencia> ejecutarBusquedaAutomatica();
-    Coincidencia confirmar(Long id);
-    Coincidencia descartar(Long id);
+    List<CoincidenciaDTO> listarTodas();
+    List<CoincidenciaDTO> listarPendientes();
+    CoincidenciaDTO obtenerPorId(Long id);
+    List<CoincidenciaDTO> ejecutarBusquedaAutomatica();
+    CoincidenciaDTO confirmar(Long id);
+    CoincidenciaDTO descartar(Long id);
 }
