@@ -1,0 +1,257 @@
+name: CI/CD Pipeline - Sanos y Salvos
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+
+jobs:
+  # ============================================================
+  # JOB 1: Build y compilación de microservicios
+  # ============================================================
+  build:
+    name: "Build - Compilar Microservicios"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar código fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Compilar todos los microservicios
+        run: |
+          mvn clean package -DskipTests -f service-registry/pom.xml
+          mvn clean package -DskipTests -f ms-usuarios/pom.xml
+          mvn clean package -DskipTests -f ms-reportes/pom.xml
+          mvn clean package -DskipTests -f ms-coincidencias/pom.xml
+          mvn clean package -DskipTests -f ms-geoespacial/pom.xml
+          mvn clean package -DskipTests -f ms-notificaciones/pom.xml
+          mvn clean package -DskipTests -f ms-integracion/pom.xml
+          mvn clean package -DskipTests -f api-gateway/pom.xml
+
+  # ============================================================
+  # JOB 2: Infraestructura como código (IE5)
+  # Provisiona SQS, verifica ECR
+  # ============================================================
+  infraestructura:
+    name: "Infraestructura - Provisionar Servicios AWS (IE5)"
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Crear cola SQS (si no existe)
+        run: |
+          echo "Verificando cola SQS sanosysalvos-notificaciones..."
+          aws sqs create-queue \
+            --queue-name sanosysalvos-notificaciones \
+            --attributes VisibilityTimeout=30 \
+          || echo "La cola ya existe, continuando..."
+          echo "Cola SQS lista."
+
+      - name: Verificar repositorios ECR
+        run: |
+          echo "Verificando repositorios ECR..."
+          for repo in service-registry ms-usuarios ms-reportes ms-coincidencias ms-geoespacial ms-notificaciones ms-integracion api-gateway; do
+            aws ecr describe-repositories \
+              --repository-names sanosysalvos/$repo \
+              --region ${{ env.AWS_REGION }} \
+            && echo "ECR sanosysalvos/$repo OK" \
+            || echo "ADVERTENCIA: sanosysalvos/$repo no encontrado en ECR"
+          done
+
+  # ============================================================
+  # JOB 3: Build y Push de imágenes Docker a ECR (IE4)
+  # ============================================================
+  push-ecr:
+    name: "Docker - Build y Push a ECR (IE4)"
+    runs-on: ubuntu-latest
+    needs: infraestructura
+    steps:
+      - name: Descargar código fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Compilar microservicios
+        run: |
+          mvn clean package -DskipTests -f service-registry/pom.xml
+          mvn clean package -DskipTests -f ms-usuarios/pom.xml
+          mvn clean package -DskipTests -f ms-reportes/pom.xml
+          mvn clean package -DskipTests -f ms-coincidencias/pom.xml
+          mvn clean package -DskipTests -f ms-geoespacial/pom.xml
+          mvn clean package -DskipTests -f ms-notificaciones/pom.xml
+          mvn clean package -DskipTests -f ms-integracion/pom.xml
+          mvn clean package -DskipTests -f api-gateway/pom.xml
+
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login a Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build y Push - service-registry
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -t $REGISTRY/sanosysalvos/service-registry:latest ./service-registry
+          docker push $REGISTRY/sanosysalvos/service-registry:latest
+
+      - name: Build y Push - ms-usuarios
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -t $REGISTRY/sanosysalvos/ms-usuarios:latest ./ms-usuarios
+          docker push $REGISTRY/sanosysalvos/ms-usuarios:latest
+
+      - name: Build y Push - ms-reportes
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -t $REGISTRY/sanosysalvos/ms-reportes:latest ./ms-reportes
+          docker push $REGISTRY/sanosysalvos/ms-reportes:latest
+
+      - name: Build y Push - ms-coincidencias
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -t $REGISTRY/sanosysalvos/ms-coincidencias:latest ./ms-coincidencias
+          docker push $REGISTRY/sanosysalvos/ms-coincidencias:latest
+
+      - name: Build y Push - ms-geoespacial
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -t $REGISTRY/sanosysalvos/ms-geoespacial:latest ./ms-geoespacial
+          docker push $REGISTRY/sanosysalvos/ms-geoespacial:latest
+
+      - name: Build y Push - ms-notificaciones
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -t $REGISTRY/sanosysalvos/ms-notificaciones:latest ./ms-notificaciones
+          docker push $REGISTRY/sanosysalvos/ms-notificaciones:latest
+
+      - name: Build y Push - ms-integracion
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -t $REGISTRY/sanosysalvos/ms-integracion:latest ./ms-integracion
+          docker push $REGISTRY/sanosysalvos/ms-integracion:latest
+
+      - name: Build y Push - api-gateway
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -t $REGISTRY/sanosysalvos/api-gateway:latest ./api-gateway
+          docker push $REGISTRY/sanosysalvos/api-gateway:latest
+
+  # ============================================================
+  # JOB 4: Deploy Lambda serverless (IE10)
+  # ============================================================
+  deploy-lambda:
+    name: "Serverless - Deploy Lambda (IE10)"
+    runs-on: ubuntu-latest
+    needs: infraestructura
+    steps:
+      - name: Descargar código fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Empaquetar y desplegar Lambda
+        run: |
+          cd lambda-notificaciones
+          zip -r lambda-notificaciones.zip index.js
+          aws lambda update-function-code \
+            --function-name sanosysalvos-notificaciones \
+            --zip-file fileb://lambda-notificaciones.zip \
+          || echo "La función Lambda no existe aún. Créala manualmente en AWS."
+
+  # ============================================================
+  # JOB 5: Deploy en EC2 con Docker Swarm (IE6)
+  # ============================================================
+  deploy-ec2:
+    name: "Deploy - EC2 Docker Swarm (IE6)"
+    runs-on: ubuntu-latest
+    needs: push-ecr
+    steps:
+      - name: Descargar código fuente
+        uses: actions/checkout@v4
+
+      - name: Copiar docker-compose al EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.yml,scripts/"
+          target: "~/sanosysalvos/"
+
+      - name: Deploy Docker Swarm en EC2
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          AWS_REGION: ${{ env.AWS_REGION }}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_SESSION_TOKEN,AWS_REGION,AWS_ACCOUNT_ID
+          script: |
+            # Login a ECR
+            aws ecr get-login-password --region $AWS_REGION | \
+              docker login --username AWS --password-stdin \
+              $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
+            # Actualizar imágenes
+            cd ~/sanosysalvos
+            export AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID
+            export AWS_REGION=$AWS_REGION
+
+            # Inicializar Swarm si no está activo
+            docker info | grep -q 'Swarm: active' || docker swarm init
+
+            # Desplegar o actualizar el stack
+            docker stack deploy \
+              -c docker-compose.yml \
+              --with-registry-auth \
+              sanosysalvos
+
+            # Verificar servicios
+            echo "Servicios desplegados:"
+            docker stack services sanosysalvos
