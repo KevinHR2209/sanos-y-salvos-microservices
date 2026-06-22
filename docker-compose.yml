@@ -66,9 +66,7 @@ services:
 
   # ── Service Registry (Eureka) ──────────────────────────────
   service-registry:
-    image: kevinhr2209/service-registry:latest
-    build:
-      context: ./service-registry
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/sanosysalvos/service-registry:latest
     ports:
       - "8761:8761"
     networks:
@@ -86,9 +84,7 @@ services:
 
   # ── ms-usuarios ───────────────────────────────────────────
   ms-usuarios:
-    image: kevinhr2209/ms-usuarios:latest
-    build:
-      context: ./ms-usuarios
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/sanosysalvos/ms-usuarios:latest
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/db_usuarios
       SPRING_DATASOURCE_USERNAME: postgres
@@ -106,9 +102,7 @@ services:
 
   # ── ms-reportes ───────────────────────────────────────────
   ms-reportes:
-    image: kevinhr2209/ms-reportes:latest
-    build:
-      context: ./ms-reportes
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/sanosysalvos/ms-reportes:latest
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/db_reportes
       SPRING_DATASOURCE_USERNAME: postgres
@@ -126,9 +120,7 @@ services:
 
   # ── ms-coincidencias ──────────────────────────────────────
   ms-coincidencias:
-    image: kevinhr2209/ms-coincidencias:latest
-    build:
-      context: ./ms-coincidencias
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/sanosysalvos/ms-coincidencias:latest
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
     networks:
@@ -143,9 +135,7 @@ services:
 
   # ── ms-geoespacial ────────────────────────────────────────
   ms-geoespacial:
-    image: kevinhr2209/ms-geoespacial:latest
-    build:
-      context: ./ms-geoespacial
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/sanosysalvos/ms-geoespacial:latest
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
     networks:
@@ -160,9 +150,7 @@ services:
 
   # ── ms-notificaciones ─────────────────────────────────────
   ms-notificaciones:
-    image: kevinhr2209/ms-notificaciones:latest
-    build:
-      context: ./ms-notificaciones
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/sanosysalvos/ms-notificaciones:latest
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/db_notificaciones
       SPRING_DATASOURCE_USERNAME: postgres
@@ -182,9 +170,7 @@ services:
 
   # ── ms-integracion ────────────────────────────────────────
   ms-integracion:
-    image: kevinhr2209/ms-integracion:latest
-    build:
-      context: ./ms-integracion
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/sanosysalvos/ms-integracion:latest
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
     networks:
@@ -199,9 +185,7 @@ services:
 
   # ── api-gateway ───────────────────────────────────────────
   api-gateway:
-    image: kevinhr2209/api-gateway:latest
-    build:
-      context: ./api-gateway
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/sanosysalvos/api-gateway:latest
     ports:
       - "8080:8080"
     environment:
