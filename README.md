@@ -145,3 +145,4 @@ docker service ps sanosysalvos_ms-reportes
 ```bash
 docker stack rm sanosysalvos
 ```
+"Actualizaci¢n menor para validar el pipeline CI/CD." 
